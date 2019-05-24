@@ -57,12 +57,6 @@ int readFromFile(std::string path, Graph &graph)
     return 0;
 }
 
-void outputToFile(std::string information, std::string path)
-{
-    std::ofstream file;
-    file.open(path);
-}
-
 int main(int argc, char *argv[])
 {
     Graph graph;
