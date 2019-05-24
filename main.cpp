@@ -1,4 +1,4 @@
-#include "TestGraph.h"
+#include "Graph.h"
 #include <fstream>
 #include <sstream>
 #include <iostream>
@@ -23,7 +23,7 @@ int readFromFile(std::string path, Graph &graph)
     {
         if(readVertex) //first section
         {
-            std::getline(file, line, '\n'); //wheter it's directed or not
+            std::getline(file, line, '\n'); 
             //std::cout << line << std::endl;
             if(line == "DIRECTED")
                 isDirected = true;
@@ -61,14 +61,11 @@ void outputToFile(std::string information, std::string path)
 {
     std::ofstream file;
     file.open(path);
-
-
 }
 
 int main(int argc, char *argv[])
 {
     Graph graph;
     readFromFile(argv[1], graph);
-    std::cout << graph.shortestPath(argv[2], argv[3]) << std::endl;
-    //std::cout << graph.dijkstras(argv[2], argv[3]) << std::endl;
+    graph.shortestPath(argv[2], argv[3]);
 }   

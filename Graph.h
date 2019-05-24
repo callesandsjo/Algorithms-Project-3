@@ -1,5 +1,5 @@
-#ifndef TEST_GRAPH_H
-#define TEST_GRAPH_H
+#ifndef GRAPH_H
+#define GRAPH_H
 
 #include <vector>
 #include <string>
@@ -7,8 +7,8 @@
 #include <map>
 #include <iostream>
 #include <limits>
+#include <fstream>
 
-const unsigned int infinity = std::numeric_limits<unsigned int>::max();
 
 class Graph
 {
@@ -18,21 +18,22 @@ class Graph
             std::string name;
             unsigned int distanceFromStart;
             Vertex* previousVertex;
-            std::vector<std::pair<unsigned int, Vertex*>> edges;
-            bool isVisited;
-            
+            std::vector<std::pair<unsigned int, Vertex*>> edges; //weight, next vertex
+            bool isVisited;        
         };
         struct compareDistance{
             bool operator()(Vertex* const& v1, Vertex* const& v2) { return v1->distanceFromStart > v2->distanceFromStart;}
         };
     private:
+        const unsigned int infinity = std::numeric_limits<unsigned int>::max();
         std::vector<Vertex*> graphVector;
         void shortestPathRecursive(std::priority_queue<Vertex*, std::vector<Vertex*>, compareDistance> &priorityQueue);
+        void outputShortestPath(Vertex* &endVertex) const;
+        Vertex* findVertex(std::string vertexName);
     public:
         void addVertex(std::string name);
         void addEdge(std::string startName, std::string endName, unsigned int weight, bool isDirected);
-        std::string shortestPath(std::string startName, std::string endName);
-        void findVertex(std::string vertexName, Vertex* &vertex);
+        void shortestPath(std::string startName, std::string endName);
         ~Graph();
 };
 
@@ -46,62 +47,52 @@ void Graph::addVertex(std::string name)
     this->graphVector.push_back(newVertex); 
 }
 
-void Graph::findVertex(std::string vertexName, Vertex* &vertex)
+Graph::Vertex* Graph::findVertex(std::string vertexName)
 {
     for(auto &v: this->graphVector)
     {
         if(v->name == vertexName)
-            vertex = v;
+            return v;
     }
+    return nullptr;
 }
 
 void Graph::addEdge(std::string startName, std::string endName, unsigned int weight, bool isDirected)
 {
-    Vertex* startVertex;
-    Vertex* endVertex;
-    findVertex(startName, startVertex);
-    findVertex(endName, endVertex);
+    Vertex* startVertex = findVertex(startName);
+    Vertex* endVertex = findVertex(endName);
+
     
     if(!isDirected)
         endVertex->edges.push_back(std::make_pair(weight, startVertex));
     startVertex->edges.push_back(std::make_pair(weight, endVertex));
 }
 
-std::string Graph::shortestPath(std::string startName, std::string endName)
+void Graph::shortestPath(std::string startName, std::string endName)
 {
-    Vertex* startVertex;
     
-    findVertex(startName, startVertex);
+    Vertex* startVertex = findVertex(startName);
     
+    if(graphVector.empty() || startVertex == nullptr)
+        return;
+
     std::priority_queue<Vertex*, std::vector<Vertex*>, compareDistance> priorityQueue;
     startVertex->distanceFromStart = 0;
-    startVertex->isVisited = true;
 
     priorityQueue.push(startVertex);
 
     shortestPathRecursive(priorityQueue);
 
-    std::string presentShortestPath = "";
-    for(auto endVertex: this->graphVector)
-    {
-        presentShortestPath = std::to_string(endVertex->distanceFromStart) + presentShortestPath;
-        while(endVertex != nullptr)
-        {
-            presentShortestPath = endVertex->name + "->" + presentShortestPath;
-            endVertex = endVertex->previousVertex;
-        }
-        presentShortestPath = " --- " + presentShortestPath;
-    }
-    return presentShortestPath;
+    Vertex* endVertex = findVertex(endName);
+
+    outputShortestPath(endVertex);
 }    
 
 void Graph::shortestPathRecursive(std::priority_queue<Vertex*, std::vector<Vertex*>, compareDistance> &priorityQueue)
 {
 
     if(priorityQueue.empty())
-    {
         return;
-    }
 
     Vertex *vertexToProcess = priorityQueue.top();
     vertexToProcess->isVisited = true;
@@ -117,6 +108,28 @@ void Graph::shortestPathRecursive(std::priority_queue<Vertex*, std::vector<Verte
         }
     }
     shortestPathRecursive(priorityQueue);
+}
+
+void Graph::outputShortestPath(Vertex* &endVertex) const
+{
+    std::ofstream file;
+    file.open("output.txt");
+
+    if(!file.is_open())
+        return;
+    
+    file << "0" << std::endl;
+    file << endVertex->distanceFromStart << std::endl;
+
+    std::string vertexPath = "";
+    while(endVertex->previousVertex != nullptr)
+    {
+        vertexPath = "->" + endVertex->name + vertexPath;
+        endVertex = endVertex->previousVertex;
+    }
+    vertexPath = endVertex->name + vertexPath;
+    file << vertexPath << std::endl;
+    file.close();
 }
 
 Graph::~Graph()
