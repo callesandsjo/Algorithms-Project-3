@@ -7,13 +7,13 @@
 
 
 
-int readFromFile(std::string path, Graph &graph)
+bool readFromFile(std::string path, Graph &graph)
 {
     std::ifstream file;
     file.open(path);
 
     if(!file.is_open())
-        return -1;
+        return false;
 
     bool readVertex = true;
     bool isDirected = false;
@@ -54,12 +54,29 @@ int readFromFile(std::string path, Graph &graph)
         }
     }
     file.close();
-    return 0;
+    return true;
 }
 
 int main(int argc, char *argv[])
 {
-    Graph graph;
-    readFromFile(argv[1], graph);
-    graph.shortestPath(argv[2], argv[3]);
+    if(argc == 4)
+    {
+        Graph graph;
+        if(readFromFile(argv[1], graph))
+        {
+            graph.shortestPath(argv[2], argv[3]); 
+            std::cout << "Success: output.txt was created att your working directory." << std::endl;
+        }
+        else
+        {
+            std::cerr << "Error: Invalid path: ";
+            std::cerr << argv[1] << std::endl;
+        }
+    }
+    else
+    {
+        std::cerr << "Error: Invalid arguments." << std::endl;
+        std::cout << "Please enter the following arguments: \nExecutable    path-to-read    startpoint    endpoint" << std::endl;
+    }
+        
 }   

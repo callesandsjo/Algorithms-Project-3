@@ -27,7 +27,7 @@ class Graph
     private:
         const unsigned int infinity = std::numeric_limits<unsigned int>::max();
         std::vector<Vertex*> graphVector;
-        void shortestPathRecursive(std::priority_queue<Vertex*, std::vector<Vertex*>, compareDistance> &priorityQueue);
+        void shortestPathRecursive(std::priority_queue<Vertex*, std::vector<Vertex*>, compareDistance> &priorityQueue, Vertex* endVertex);
         void outputShortestPath(Vertex* &endVertex) const;
         Vertex* findVertex(std::string vertexName);
     public:
@@ -72,8 +72,8 @@ void Graph::shortestPath(std::string startName, std::string endName)
 {
     
     Vertex* startVertex = findVertex(startName);
-    
-    if(graphVector.empty() || startVertex == nullptr)
+    Vertex* endVertex = findVertex(endName);
+    if(startVertex == nullptr || endVertex == nullptr)
         return;
 
     std::priority_queue<Vertex*, std::vector<Vertex*>, compareDistance> priorityQueue;
@@ -81,17 +81,14 @@ void Graph::shortestPath(std::string startName, std::string endName)
 
     priorityQueue.push(startVertex);
 
-    shortestPathRecursive(priorityQueue);
-
-    Vertex* endVertex = findVertex(endName);
-
+    shortestPathRecursive(priorityQueue, endVertex);
     outputShortestPath(endVertex);
 }    
 
-void Graph::shortestPathRecursive(std::priority_queue<Vertex*, std::vector<Vertex*>, compareDistance> &priorityQueue)
+void Graph::shortestPathRecursive(std::priority_queue<Vertex*, std::vector<Vertex*>, compareDistance> &priorityQueue, Vertex *endVertex)
 {
 
-    if(priorityQueue.empty())
+    if(priorityQueue.top() == endVertex) //searching until shortest path to endVertex is found
         return;
 
     Vertex *vertexToProcess = priorityQueue.top();
@@ -107,7 +104,7 @@ void Graph::shortestPathRecursive(std::priority_queue<Vertex*, std::vector<Verte
             priorityQueue.push(nextVertex.second);
         }
     }
-    shortestPathRecursive(priorityQueue);
+    shortestPathRecursive(priorityQueue, endVertex);
 }
 
 void Graph::outputShortestPath(Vertex* &endVertex) const
