@@ -26,16 +26,21 @@ class Graph
         };
     private:
         const unsigned int infinity = std::numeric_limits<unsigned int>::max();
+        bool isDirected;
         std::vector<Vertex*> graphVector;
         void shortestPathRecursive(std::priority_queue<Vertex*, std::vector<Vertex*>, compareDistance> &priorityQueue, Vertex* endVertex);
-        void outputShortestPath(Vertex* &endVertex) const;
+        bool outputShortestPath(Vertex* startVertex, Vertex* endVertex) const;
         Vertex* findVertex(std::string vertexName);
     public:
+        Graph(bool isDirected);
         void addVertex(std::string name);
-        void addEdge(std::string startName, std::string endName, unsigned int weight, bool isDirected);
-        void shortestPath(std::string startName, std::string endName);
+        void addEdge(std::string startName, std::string endName, unsigned int weight);
+        bool shortestPath(std::string startName, std::string endName);
         ~Graph();
 };
+
+Graph::Graph(bool isDirected)
+    : isDirected(isDirected) {}
 
 void Graph::addVertex(std::string name)
 {
@@ -57,24 +62,23 @@ Graph::Vertex* Graph::findVertex(std::string vertexName)
     return nullptr;
 }
 
-void Graph::addEdge(std::string startName, std::string endName, unsigned int weight, bool isDirected)
+void Graph::addEdge(std::string startName, std::string endName, unsigned int weight)
 {
     Vertex* startVertex = findVertex(startName);
     Vertex* endVertex = findVertex(endName);
 
     
-    if(!isDirected)
+    if(!this->isDirected)
         endVertex->edges.push_back(std::make_pair(weight, startVertex));
     startVertex->edges.push_back(std::make_pair(weight, endVertex));
 }
 
-void Graph::shortestPath(std::string startName, std::string endName)
+bool Graph::shortestPath(std::string startName, std::string endName)
 {
     
     Vertex* startVertex = findVertex(startName);
     Vertex* endVertex = findVertex(endName);
-    if(startVertex == nullptr || endVertex == nullptr)
-        return;
+    
 
     std::priority_queue<Vertex*, std::vector<Vertex*>, compareDistance> priorityQueue;
     startVertex->distanceFromStart = 0;
@@ -82,13 +86,15 @@ void Graph::shortestPath(std::string startName, std::string endName)
     priorityQueue.push(startVertex);
 
     shortestPathRecursive(priorityQueue, endVertex);
-    outputShortestPath(endVertex);
+    if(startVertex == nullptr || endVertex == nullptr || !outputShortestPath(startVertex, endVertex))
+        return false;
+    return true;
 }    
 
 void Graph::shortestPathRecursive(std::priority_queue<Vertex*, std::vector<Vertex*>, compareDistance> &priorityQueue, Vertex *endVertex)
 {
 
-    if(priorityQueue.top() == endVertex) //searching until shortest path to endVertex is found
+    if(priorityQueue.top() == endVertex || priorityQueue.empty()) //searching until shortest path to endVertex is found or entire graph has been searched (in case startNode and endNode isnt connected)
         return;
 
     Vertex *vertexToProcess = priorityQueue.top();
@@ -107,17 +113,10 @@ void Graph::shortestPathRecursive(std::priority_queue<Vertex*, std::vector<Verte
     shortestPathRecursive(priorityQueue, endVertex);
 }
 
-void Graph::outputShortestPath(Vertex* &endVertex) const
+bool Graph::outputShortestPath(Vertex* startVertex, Vertex* endVertex) const
 {
+    unsigned int distance = endVertex->distanceFromStart;
     std::ofstream file;
-    file.open("output.txt");
-
-    if(!file.is_open())
-        return;
-    
-    file << "0" << std::endl;
-    file << endVertex->distanceFromStart << std::endl;
-
     std::string vertexPath = "";
     while(endVertex->previousVertex != nullptr)
     {
@@ -125,8 +124,15 @@ void Graph::outputShortestPath(Vertex* &endVertex) const
         endVertex = endVertex->previousVertex;
     }
     vertexPath = endVertex->name + vertexPath;
+    file.open("Answer.txt");
+    if(startVertex != endVertex || !file.is_open()) //startVertex and endVertex is not connected
+        return false;
+
+    file << "0" << std::endl;
+    file << distance << std::endl;
     file << vertexPath << std::endl;
     file.close();
+    return true;
 }
 
 Graph::~Graph()
